@@ -157,7 +157,21 @@ const getCafColor = s => { if (!s) return "#6b7280"; const k = Object.keys(cafCo
 function TabAlojamientos({ data, camasMap }) {
   const [q, setQ, filtered] = useSearch(data, ["propiedad", "encargado", "empleado", "dir_alojamiento", "poblacion", "ref"]);
   const [filtroEnc, setFiltroEnc] = useState("TODOS");
-  const final = useMemo(() => filtered.filter(a => filtroEnc === "TODOS" || (a.encargado||"").trim().toUpperCase() === filtroEnc), [filtered, filtroEnc]);
+  const [filtroEmp, setFiltroEmp] = useState("TODOS");
+
+  const empleados = useMemo(() => {
+    const uniq = [...new Set(data.map(a => a.empleado?.trim()).filter(Boolean))].sort();
+    return ["TODOS", ...uniq];
+  }, [data]);
+
+  const final = useMemo(() => filtered.filter(a => {
+    if (filtroEnc !== "TODOS" && (a.encargado||"").trim().toUpperCase() !== filtroEnc) return false;
+    if (filtroEmp !== "TODOS") {
+      if (filtroEmp === "SIN ASIGNAR") return !a.empleado;
+      if ((a.empleado||"").trim() !== filtroEmp) return false;
+    }
+    return true;
+  }), [filtered, filtroEnc, filtroEmp]);
 
   const encBtns = [
     { key: "TODOS",     label: "Todos",     activeBg: "#1e3a5f",                     activeColor: "white", inBg: "#f3f4f6",                      inColor: "#374151" },
@@ -165,6 +179,14 @@ function TabAlojamientos({ data, camasMap }) {
     { key: "CATI",      label: "Cati",      activeBg: encargadoColor.CATI.text,      activeColor: "white", inBg: encargadoColor.CATI.bg,         inColor: encargadoColor.CATI.text },
     { key: "MARIA",     label: "María",     activeBg: encargadoColor.MARIA.text,     activeColor: "white", inBg: encargadoColor.MARIA.bg,        inColor: encargadoColor.MARIA.text },
   ];
+
+  // Colores para empleados de limpieza
+  const empColorList = ["#f59e0b","#10b981","#3b82f6","#ec4899","#8b5cf6","#ef4444","#14b8a6","#f97316","#6366f1"];
+  const empColorMap = useMemo(() => {
+    const map = {};
+    empleados.filter(e => e !== "TODOS").forEach((e, i) => { map[e] = empColorList[i % empColorList.length]; });
+    return map;
+  }, [empleados]);
 
   const YN = ({ value, label }) => {
     if (!value) return null;
@@ -180,13 +202,35 @@ function TabAlojamientos({ data, camasMap }) {
   return (
     <div>
       <SearchBox value={q} onChange={setQ} placeholder="Buscar por nombre, dirección, población, ref..." />
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "14px", alignItems: "center" }}>
-        <span style={{ fontSize: "12px", color: "#9ca3af", fontWeight: 600, marginRight: "2px" }}>👤 Encargado:</span>
+
+      {/* Filtro encargado */}
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "10px", alignItems: "center" }}>
+        <span style={{ fontSize: "12px", color: "#9ca3af", fontWeight: 600, minWidth: "90px" }}>🗂 Encargado:</span>
         {encBtns.map(b => {
           const active = filtroEnc === b.key;
-          return <button key={b.key} onClick={() => setFiltroEnc(b.key)} style={{ padding: "6px 14px", borderRadius: "20px", cursor: "pointer", fontWeight: 700, fontSize: "13px", border: "2px solid transparent", background: active ? b.activeBg : b.inBg, color: active ? b.activeColor : b.inColor, transition: "all 0.15s" }}>{b.label}</button>;
+          return <button key={b.key} onClick={() => setFiltroEnc(b.key)} style={{ padding: "5px 13px", borderRadius: "20px", cursor: "pointer", fontWeight: 700, fontSize: "12px", border: "2px solid transparent", background: active ? b.activeBg : b.inBg, color: active ? b.activeColor : b.inColor, transition: "all 0.15s" }}>{b.label}</button>;
         })}
       </div>
+
+      {/* Filtro empleado limpieza */}
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "14px", alignItems: "center" }}>
+        <span style={{ fontSize: "12px", color: "#9ca3af", fontWeight: 600, minWidth: "90px" }}>🧹 Limpieza:</span>
+        {["TODOS", "SIN ASIGNAR", ...empleados.filter(e => e !== "TODOS")].map(emp => {
+          const active = filtroEmp === emp;
+          const col = emp === "TODOS" ? "#374151" : emp === "SIN ASIGNAR" ? "#9ca3af" : (empColorMap[emp] || "#6b7280");
+          const activeBg = emp === "TODOS" ? "#1e3a5f" : col;
+          return (
+            <button key={emp} onClick={() => setFiltroEmp(emp)} style={{
+              padding: "5px 13px", borderRadius: "20px", cursor: "pointer", fontWeight: 700, fontSize: "12px",
+              border: active ? "2px solid transparent" : `2px solid ${col}44`,
+              background: active ? activeBg : col + "15",
+              color: active ? "white" : col,
+              transition: "all 0.15s"
+            }}>{emp === "SIN ASIGNAR" ? "Sin asignar" : emp}</button>
+          );
+        })}
+      </div>
+
       <div style={{ fontSize: "12px", color: "#6b7280", marginBottom: "12px" }}>{final.length} alojamientos</div>
       {final.length === 0 ? <EmptyState /> : (
         <div style={{ display: "grid", gap: "12px" }}>

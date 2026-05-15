@@ -229,17 +229,17 @@ function TabAlojamientos({ data, camasMap }) {
                       <span style={{ background: getCafColor(extras.cafetera_airbnb)+"18", color: getCafColor(extras.cafetera_airbnb), border: `1px solid ${getCafColor(extras.cafetera_airbnb)}44`, borderRadius: "6px", padding: "2px 8px", fontSize: "12px", fontWeight: 700 }}>{extras.cafetera_airbnb}</span>
                     </div>
                   )}
-                  {extras.wifi === "SI" && extras.wifi_usuario && (
-                    <div>
-                      <div style={{ fontSize: "9px", fontWeight: 800, color: "#3b82f6", letterSpacing: "0.5px", marginBottom: "3px" }}>👤 USUARIO WiFi</div>
-                      <span style={{ background: "#eff6ff", color: "#1e40af", border: "1px solid #bfdbfe", borderRadius: "6px", padding: "2px 8px", fontSize: "12px", fontWeight: 700, fontFamily: "monospace" }}>{extras.wifi_usuario}</span>
-                    </div>
-                  )}
-                  {extras.wifi === "SI" && extras.wifi_clave && (
-                    <div>
-                      <div style={{ fontSize: "9px", fontWeight: 800, color: "#3b82f6", letterSpacing: "0.5px", marginBottom: "3px" }}>🔑 CLAVE WiFi</div>
-                      <span style={{ background: "#eff6ff", color: "#1e40af", border: "1px solid #bfdbfe", borderRadius: "6px", padding: "2px 8px", fontSize: "12px", fontWeight: 700, fontFamily: "monospace" }}>{extras.wifi_clave}</span>
-                    </div>
+                  {extras.wifi === "SI" && (
+                    <>
+                      <div>
+                        <div style={{ fontSize: "9px", fontWeight: 800, color: "#3b82f6", letterSpacing: "0.5px", marginBottom: "3px" }}>👤 USUARIO WiFi</div>
+                        <span style={{ background: "#eff6ff", color: "#1e40af", border: "1px solid #bfdbfe", borderRadius: "6px", padding: "2px 8px", fontSize: "12px", fontWeight: 700, fontFamily: "monospace" }}>{extras.wifi_usuario || "—"}</span>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: "9px", fontWeight: 800, color: "#3b82f6", letterSpacing: "0.5px", marginBottom: "3px" }}>🔑 CLAVE WiFi</div>
+                        <span style={{ background: "#eff6ff", color: "#1e40af", border: "1px solid #bfdbfe", borderRadius: "6px", padding: "2px 8px", fontSize: "12px", fontWeight: 700, fontFamily: "monospace" }}>{extras.wifi_clave || "—"}</span>
+                      </div>
+                    </>
                   )}
                   {!extras.mascotas && !extras.cafetera_drive && <span style={{ fontSize: "12px", color: "#9ca3af", fontStyle: "italic" }}>Sin datos de equipamiento</span>}
                 </div>
@@ -322,21 +322,17 @@ function TabCamas({ camasMap }) {
                   <span style={{ fontSize: "11px", color: "#9ca3af" }}>WiFi</span><Badge value={c.wifi} type="yesno" />
                 </div>
               </div>
-              {(c.wifi === "SI" && (c.wifi_usuario || c.wifi_clave)) && (
-                <div style={{ background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: "10px", padding: "10px 12px", marginBottom: "8px", display: "flex", gap: "16px", flexWrap: "wrap" }}>
-                  <div style={{ fontSize: "11px", color: "#1e40af", fontWeight: 800, alignSelf: "center" }}>📶 CREDENCIALES WiFi</div>
-                  {c.wifi_usuario && (
-                    <div>
-                      <div style={{ fontSize: "10px", color: "#3b82f6", fontWeight: 700, marginBottom: "2px" }}>USUARIO</div>
-                      <div style={{ fontSize: "13px", color: "#1e3a8a", fontWeight: 700, fontFamily: "monospace", background: "white", padding: "2px 8px", borderRadius: "6px", border: "1px solid #bfdbfe" }}>{c.wifi_usuario}</div>
-                    </div>
-                  )}
-                  {c.wifi_clave && (
-                    <div>
-                      <div style={{ fontSize: "10px", color: "#3b82f6", fontWeight: 700, marginBottom: "2px" }}>CONTRASEÑA</div>
-                      <div style={{ fontSize: "13px", color: "#1e3a8a", fontWeight: 700, fontFamily: "monospace", background: "white", padding: "2px 8px", borderRadius: "6px", border: "1px solid #bfdbfe" }}>{c.wifi_clave}</div>
-                    </div>
-                  )}
+              {c.wifi === "SI" && (
+                <div style={{ background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: "10px", padding: "10px 12px", marginBottom: "8px", display: "flex", gap: "16px", flexWrap: "wrap", alignItems: "center" }}>
+                  <div style={{ fontSize: "11px", color: "#1e40af", fontWeight: 800 }}>📶 WiFi</div>
+                  <div>
+                    <div style={{ fontSize: "10px", color: "#3b82f6", fontWeight: 700, marginBottom: "2px" }}>USUARIO</div>
+                    <div style={{ fontSize: "13px", color: "#1e3a8a", fontWeight: 700, fontFamily: "monospace", background: "white", padding: "2px 10px", borderRadius: "6px", border: "1px solid #bfdbfe", minWidth: "80px" }}>{c.wifi_usuario || <span style={{color:"#9ca3af"}}>—</span>}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: "10px", color: "#3b82f6", fontWeight: 700, marginBottom: "2px" }}>CONTRASEÑA</div>
+                    <div style={{ fontSize: "13px", color: "#1e3a8a", fontWeight: 700, fontFamily: "monospace", background: "white", padding: "2px 10px", borderRadius: "6px", border: "1px solid #bfdbfe", minWidth: "80px" }}>{c.wifi_clave || <span style={{color:"#9ca3af"}}>—</span>}</div>
+                  </div>
                 </div>
               )}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>

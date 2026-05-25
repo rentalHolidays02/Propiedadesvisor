@@ -72,7 +72,7 @@ function parseCamas(rows) {
     map[key] = {
       camas:           g(r, fi(iCamas, 3)),
       mascotas:        (g(r, fi(iMascota, 4)) || "").toUpperCase() || null,
-      wifi:            (g(r, fi(iWifi, 5)) || "").toUpperCase().includes("SI") ? "SI" : "NO",
+      wifi:            (g(r, fi(iWifi, 5)) || "").toUpperCase() || null,
       wifi_usuario:    g(r, fi(iUsuario, 6)),
       wifi_clave:      g(r, fi(iClave, 7)),
       cafetera_drive:  g(r, fi(iDrive, 8)),
@@ -311,7 +311,7 @@ function TabAlojamientos({ data, camasMap }) {
                       <span style={{ background: getCafColor(extras.cafetera_airbnb)+"18", color: getCafColor(extras.cafetera_airbnb), border: `1px solid ${getCafColor(extras.cafetera_airbnb)}44`, borderRadius: "6px", padding: "2px 8px", fontSize: "12px", fontWeight: 700 }}>{extras.cafetera_airbnb}</span>
                     </div>
                   )}
-                  {(extras.wifi === "SI" || String(extras.wifi).includes("SI")) && (
+                  {extras.wifi === "SI" && (
                     <>
                       <div>
                         <div style={{ fontSize: "9px", fontWeight: 800, color: "#3b82f6", letterSpacing: "0.5px", marginBottom: "3px" }}>👤 USUARIO WiFi</div>
@@ -404,7 +404,7 @@ function TabCamas({ camasMap }) {
                   <span style={{ fontSize: "11px", color: "#9ca3af" }}>WiFi</span><Badge value={c.wifi} type="yesno" />
                 </div>
               </div>
-              {(c.wifi === "SI" || String(c.wifi).includes("SI")) && (
+              {c.wifi === "SI" && (
                 <div style={{ background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: "10px", padding: "10px 12px", marginBottom: "8px", display: "flex", gap: "16px", flexWrap: "wrap", alignItems: "center" }}>
                   <div style={{ fontSize: "11px", color: "#1e40af", fontWeight: 800 }}>📶 WiFi</div>
                   <div>

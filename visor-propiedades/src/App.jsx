@@ -33,18 +33,50 @@ function parseAlojamientos(rows) {
 }
 
 function parseCamas(rows) {
+  // Find column indices dynamically from header rows (rows 0-2)
+  // Flatten all header rows into one lookup: headerText -> colIndex
+  const headerIdx = {};
+  rows.slice(0, 3).forEach(row => {
+    row.forEach((cell, i) => {
+      if (cell && cell.trim()) {
+        headerIdx[cell.trim().toUpperCase()] = i;
+      }
+    });
+  });
+
+  // Helper: find index by possible header names
+  const col = (...names) => {
+    for (const n of names) {
+      const idx = headerIdx[n.toUpperCase()];
+      if (idx !== undefined) return idx;
+    }
+    return -1;
+  };
+
+  const iRef      = col("REF.", "REF", "REFERENCIA");
+  const iCamas    = col("CAMAS");
+  const iMascota  = col("MASCOTAS");
+  const iWifi     = col("WIFI");
+  const iUsuario  = col("USUARIO");
+  const iClave    = col("CLAVES", "CLAVE", "CONTRASEÑA", "PASSWORD");
+  const iDrive    = col("INFO. DRIVE", "INFO.DRIVE", "DRIVE");
+  const iAirbnb   = col("AIRBNB");
+
+  // Fallback to fixed indices if headers not found
+  const fi = (detected, fallback) => detected >= 0 ? detected : fallback;
+
   const map = {};
-  rows.slice(3).filter(r => g(r, 2)).forEach(r => {
-    const raw = g(r, 2) || "";
+  rows.slice(3).filter(r => g(r, fi(iRef, 2))).forEach(r => {
+    const raw = g(r, fi(iRef, 2)) || "";
     const key = raw.replace("*", "").padStart(3, "0");
     map[key] = {
-      camas:           g(r, 3),
-      mascotas:        (g(r, 4) || "").toUpperCase() || null,
-      wifi:            (g(r, 5) || "").toUpperCase() || null,
-      wifi_usuario:    g(r, 6),
-      wifi_clave:      g(r, 7),
-      cafetera_drive:  g(r, 8),
-      cafetera_airbnb: g(r, 10),
+      camas:           g(r, fi(iCamas, 3)),
+      mascotas:        (g(r, fi(iMascota, 4)) || "").toUpperCase() || null,
+      wifi:            (g(r, fi(iWifi, 5)) || "").toUpperCase().includes("SI") ? "SI" : "NO",
+      wifi_usuario:    g(r, fi(iUsuario, 6)),
+      wifi_clave:      g(r, fi(iClave, 7)),
+      cafetera_drive:  g(r, fi(iDrive, 8)),
+      cafetera_airbnb: g(r, fi(iAirbnb, 10)),
     };
   });
   return map;
@@ -279,7 +311,7 @@ function TabAlojamientos({ data, camasMap }) {
                       <span style={{ background: getCafColor(extras.cafetera_airbnb)+"18", color: getCafColor(extras.cafetera_airbnb), border: `1px solid ${getCafColor(extras.cafetera_airbnb)}44`, borderRadius: "6px", padding: "2px 8px", fontSize: "12px", fontWeight: 700 }}>{extras.cafetera_airbnb}</span>
                     </div>
                   )}
-                  {extras.wifi === "SI" && (
+                  {(extras.wifi === "SI" || String(extras.wifi).includes("SI")) && (
                     <>
                       <div>
                         <div style={{ fontSize: "9px", fontWeight: 800, color: "#3b82f6", letterSpacing: "0.5px", marginBottom: "3px" }}>👤 USUARIO WiFi</div>
@@ -372,7 +404,7 @@ function TabCamas({ camasMap }) {
                   <span style={{ fontSize: "11px", color: "#9ca3af" }}>WiFi</span><Badge value={c.wifi} type="yesno" />
                 </div>
               </div>
-              {c.wifi === "SI" && (
+              {(c.wifi === "SI" || String(c.wifi).includes("SI")) && (
                 <div style={{ background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: "10px", padding: "10px 12px", marginBottom: "8px", display: "flex", gap: "16px", flexWrap: "wrap", alignItems: "center" }}>
                   <div style={{ fontSize: "11px", color: "#1e40af", fontWeight: 800 }}>📶 WiFi</div>
                   <div>

@@ -38,6 +38,7 @@ function parseCamas(rows) {
     const raw = g(r, 2) || "";
     const key = raw.replace("*", "").padStart(3, "0");
     map[key] = {
+      camas:           g(r, 3),
       mascotas:        (g(r, 4) || "").toUpperCase() || null,
       wifi:            (g(r, 5) || "").toUpperCase() || null,
       wifi_usuario:    g(r, 6),
@@ -244,6 +245,11 @@ function TabAlojamientos({ data, camasMap }) {
                   <span style={{ fontWeight: 700, fontSize: "15px", color: "#111827", flex: 1 }}>{a.propiedad}</span>
                 </div>
                 {a.dir_alojamiento && <div style={{ fontSize: "13px", color: "#4b5563", marginBottom: "10px" }}>📍 {a.dir_alojamiento}{a.poblacion ? " — " : ""}<strong>{a.poblacion}</strong></div>}
+                {extras.camas && (
+                  <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "8px", padding: "7px 12px", marginBottom: "10px", fontSize: "13px", color: "#166534" }}>
+                    🛏 <strong>Camas:</strong> {extras.camas}
+                  </div>
+                )}
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", marginBottom: "10px" }}>
                   {[
                     { label: "ENCARGADO",  render: <Badge value={a.encargado} type="encargado" /> },

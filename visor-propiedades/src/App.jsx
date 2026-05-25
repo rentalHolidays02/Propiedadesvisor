@@ -34,7 +34,6 @@ function parseAlojamientos(rows) {
 
 function parseCamas(rows) {
   // Find column indices dynamically from header rows (rows 0-2)
-  // Flatten all header rows into one lookup: headerText -> colIndex
   const headerIdx = {};
   rows.slice(0, 3).forEach(row => {
     row.forEach((cell, i) => {
@@ -53,7 +52,7 @@ function parseCamas(rows) {
     return -1;
   };
 
-  const iRef      = col("REF.", "REF", "REFERENCIA");
+  const iRef      = col("REF.", "REF", "REFERENCIA", "Nº", "NRO");
   const iCamas    = col("CAMAS");
   const iMascota  = col("MASCOTAS");
   const iWifi     = col("WIFI");
@@ -66,13 +65,25 @@ function parseCamas(rows) {
   const fi = (detected, fallback) => detected >= 0 ? detected : fallback;
 
   const map = {};
-  rows.slice(3).filter(r => g(r, fi(iRef, 2))).forEach(r => {
-    const raw = g(r, fi(iRef, 2)) || "";
-    const key = raw.replace("*", "").padStart(3, "0");
+  rows.slice(3).forEach(r => {
+    const colRefIndex = fi(iRef, 2);
+    if (!r[colRefIndex]) return;
+
+    // LIMPIEZA ULTRA-ROBUSTA DE LA REFERENCIA: Quita asteriscos, espacios y caracteres no numéricos
+    const rawRef = String(r[colRefIndex]).replace(/\*/g, "").trim();
+    const cleanNumber = rawRef.replace(/\D/g, ""); // Deja solo los dígitos numéricos
+    
+    if (!cleanNumber) return; // Si no tiene números válidos, se salta la fila
+    const key = cleanNumber.padStart(3, "0"); // Convierte "4", "*4" o "04" de forma idéntica en "004"
+
+    // DETECCIÓN FLEXIBLE DE WIFI: Acepta "SI", "SI (ROUTER)", "SI (MOVISTAR)", "SÍ" con acento
+    const rawWifi = (g(r, fi(iWifi, 5)) || "").toUpperCase();
+    const tieneWifi = rawWifi.includes("SI") || rawWifi.includes("SÍ") ? "SI" : "NO";
+
     map[key] = {
       camas:           g(r, fi(iCamas, 3)),
       mascotas:        (g(r, fi(iMascota, 4)) || "").toUpperCase() || null,
-      wifi:            (g(r, fi(iWifi, 5)) || "").toUpperCase() || null,
+      wifi:            tieneWifi,
       wifi_usuario:    g(r, fi(iUsuario, 6)),
       wifi_clave:      g(r, fi(iClave, 7)),
       cafetera_drive:  g(r, fi(iDrive, 8)),
@@ -146,7 +157,7 @@ const Badge = ({ value, type }) => {
     return <span style={{ background: c.bg, color: c.text, border: `1px solid ${c.border}`, borderRadius: "20px", padding: "2px 10px", fontSize: "12px", fontWeight: 700 }}>{value.trim()}</span>;
   }
   if (type === "yesno") {
-    const yes = v === "SI";
+    const yes = v === "SI" || v.includes("SI") || v.includes("SÍ");
     return <span style={{ background: yes ? "#dcfce7" : "#fee2e2", color: yes ? "#166534" : "#991b1b", borderRadius: "20px", padding: "2px 10px", fontSize: "12px", fontWeight: 700 }}>{yes ? "✓ SÍ" : "✗ NO"}</span>;
   }
   if (type === "router") {
@@ -213,7 +224,6 @@ function TabAlojamientos({ data, camasMap }) {
     { key: "MARIA",     label: "María",     activeBg: encargadoColor.MARIA.text,     activeColor: "white", inBg: encargadoColor.MARIA.bg,        inColor: encargadoColor.MARIA.text },
   ];
 
-  // Colores para empleados de limpieza
   const empColorList = ["#f59e0b","#10b981","#3b82f6","#ec4899","#8b5cf6","#ef4444","#14b8a6","#f97316","#6366f1"];
   const empColorMap = useMemo(() => {
     const map = {};
@@ -236,7 +246,6 @@ function TabAlojamientos({ data, camasMap }) {
     <div>
       <SearchBox value={q} onChange={setQ} placeholder="Buscar por nombre, dirección, población, ref..." />
 
-      {/* Filtro encargado */}
       <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "10px", alignItems: "center" }}>
         <span style={{ fontSize: "12px", color: "#9ca3af", fontWeight: 600, minWidth: "90px" }}>🗂 Encargado:</span>
         {encBtns.map(b => {
@@ -245,7 +254,6 @@ function TabAlojamientos({ data, camasMap }) {
         })}
       </div>
 
-      {/* Filtro empleado limpieza */}
       <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "14px", alignItems: "center" }}>
         <span style={{ fontSize: "12px", color: "#9ca3af", fontWeight: 600, minWidth: "90px" }}>🧹 Limpieza:</span>
         {["TODOS", "SIN ASIGNAR", ...empleados.filter(e => e !== "TODOS")].map(emp => {
@@ -323,7 +331,7 @@ function TabAlojamientos({ data, camasMap }) {
                       </div>
                     </>
                   )}
-                  {!extras.mascotas && !extras.cafetera_drive && <span style={{ fontSize: "12px", color: "#9ca3af", fontStyle: "italic" }}>Sin datos de equipamiento</span>}
+                  {!extras.mascotas && !extras.wifi && !extras.cafetera_drive && <span style={{ fontSize: "12px", color: "#9ca3af", fontStyle: "italic" }}>Sin datos de equipamiento</span>}
                 </div>
                 {a.observaciones && <div style={{ marginTop: "10px", background: "#fffbeb", border: "1px solid #fde68a", borderRadius: "8px", padding: "8px 12px", fontSize: "12px", color: "#92400e" }}>💬 {a.observaciones}</div>}
               </div>

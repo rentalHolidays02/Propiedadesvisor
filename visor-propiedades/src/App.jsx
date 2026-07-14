@@ -17,10 +17,67 @@ const SHEET_NAMES = {
 // ─── PARSERS ──────────────────────────────────────────────────────────────────
 const g  = (row, i) => (i < row.length && row[i] !== "" ? row[i].trim() : null);
 
+// Reasignaciones manuales: Cristobal deja la gestión (todo pasa a Luismi);
+// Cati deja la gestión (todo pasa a María, que se suma a lo que ya tenía).
+const ENCARGADO_OVERRIDE = {
+  "RESIDENCIAL PORTOFINO V OROPESA": "LUISMI",
+  "APARTAMENTO MAR DE OROPESA I": "LUISMI",
+  "APARTAMENTO ALGAIDA": "LUISMI",
+  "APARTAMENTO ANCLAMAR I": "LUISMI",
+  "APARTAMENTO OROPESA PUEBLO": "LUISMI",
+  "APARTAMENTO OROPESA EL FARO": "LUISMI",
+  "APARTAMENTO COSTA AZAHAR II": "LUISMI",
+  "APARTAMENTO COSTA AZAHAR III": "LUISMI",
+  "BUNGALOW EL BALCO OROPESA": "LUISMI",
+  "RESIDENCIAL NOVA OROPESA": "LUISMI",
+  "APARTAMENTO ANCLAMAR II": "LUISMI",
+  "APARTAMENTO OROPESA AGUA  MARINA III": "LUISMI",
+  "APARTAMENTO COSTA MARINA II": "LUISMI",
+  "APARTAMENTO OROPESA VISTAMAR": "LUISMI",
+  "APTO ACAPULCO IV": "LUISMI",
+  "ATICO DUPLEX ALGAIDA II": "LUISMI",
+  "APARTAMENTO COSTA AZAHAR I": "LUISMI",
+  "APARTAMENTO CORAL III": "LUISMI",
+  "APARTAMENTO AGUA MARINA I": "LUISMI",
+  "APARTAMENTO VISTAMAR III": "LUISMI",
+  "APARTAMENTO MORRO DE GOS": "LUISMI",
+  "BUNGALOW MORRO DE GOS": "LUISMI",
+  "APARTAMENTO OROPESA GALEON": "LUISMI",
+  "APARTAMENTO OROPESA EL FARO II": "LUISMI",
+  "BUNGALOW MORRO DE GOS II": "LUISMI",
+  "APARTAMENTOS LA CONCHA": "LUISMI",
+  "APARTAMENTO OROPESA VISTAMAR IV": "LUISMI",
+  "APARTAMENTO VILA DE OROPESA": "LUISMI",
+  "APARTAMENTO TREBOL II": "LUISMI",
+  "VILLA AEROCLUB": "MARIA",
+  "APARTAMENTO BENIDORM": "MARIA",
+  "APARTAMENTO RIVIERA BENICASIM": "MARIA",
+  "VILLA GRAO BENICASIM": "MARIA",
+  "APARTAMENTO CASTELLON II": "MARIA",
+  "CHALET BORRIOL": "MARIA",
+  "BUNGALOW PEÑISCOLA": "MARIA",
+  "APARTAMENTO PEÑISCOLA": "MARIA",
+  "APARTAMENTO BENICASIM EUROSOL": "MARIA",
+  "APARTAMENTO  ALMAZORA II": "MARIA",
+  "APTO LOS MOLINOS, LUCENA DEL CID  BAJO B": "MARIA",
+  "APTO LOS MOLINOS, LUCENA DEL CID  BAJO C": "MARIA",
+  "APTO LOS MOLINOS, LUCENA DEL CID SOTANO A": "MARIA",
+  "BUNGALOW SANTA POLA I": "MARIA",
+  "BUNGALOW SANTA POLA II": "MARIA",
+  "APARTAMENTO EN TORREBLANCA III": "MARIA",
+  "APARTAMENTO URB. NEREA II": "MARIA",
+  "BUNGALOW ESQUI VALDELINARES": "MARIA",
+  "APARTAMENTOS ALCOCEBRE": "MARIA",
+  "CASA DE PESCADORES ALMAZORA": "MARIA",
+  "BUNGALOW ESQUI VALDELINARES II": "MARIA",
+  "APARTAMENTO BENICASIM EUROSOL II": "MARIA",
+  "VILLA SERRADAL": "MARIA",
+};
+
 function parseAlojamientos(rows) {
   return rows.slice(1).filter(r => g(r, 0)).map(r => ({
     propiedad:       g(r, 0),
-    encargado:       g(r, 1),
+    encargado:       ENCARGADO_OVERRIDE[g(r, 0)] || g(r, 1),
     empleado:        g(r, 2),
     ref:             g(r, 3),
     capacidad:       g(r, 22),
@@ -144,9 +201,8 @@ async function fetchSheet(name) {
 
 // ─── UI HELPERS ───────────────────────────────────────────────────────────────
 const encargadoColor = {
-  CRISTOBAL: { bg: "#dbeafe", text: "#1e40af", border: "#93c5fd" },
-  CATI:      { bg: "#fce7f3", text: "#9d174d", border: "#f9a8d4" },
-  MARIA:     { bg: "#dcfce7", text: "#166534", border: "#86efac" },
+  LUISMI: { bg: "#dbeafe", text: "#1e40af", border: "#93c5fd" },
+  MARIA:  { bg: "#dcfce7", text: "#166534", border: "#86efac" },
 };
 
 const Badge = ({ value, type }) => {
@@ -217,10 +273,15 @@ function TabAlojamientos({ data, camasMap }) {
     return true;
   }), [filtered, filtroEnc, filtroEmp]);
 
+  const [pageSize, setPageSize] = useState(10);
+  const [page, setPage] = useState(1);
+  useEffect(() => { setPage(1); }, [q, filtroEnc, filtroEmp, pageSize]);
+  const totalPages = Math.max(1, Math.ceil(final.length / pageSize));
+  const pageItems = final.slice((page - 1) * pageSize, page * pageSize);
+
   const encBtns = [
     { key: "TODOS",     label: "Todos",     activeBg: "#1e3a5f",                     activeColor: "white", inBg: "#f3f4f6",                      inColor: "#374151" },
-    { key: "CRISTOBAL", label: "Cristóbal", activeBg: encargadoColor.CRISTOBAL.text, activeColor: "white", inBg: encargadoColor.CRISTOBAL.bg,    inColor: encargadoColor.CRISTOBAL.text },
-    { key: "CATI",      label: "Cati",      activeBg: encargadoColor.CATI.text,      activeColor: "white", inBg: encargadoColor.CATI.bg,         inColor: encargadoColor.CATI.text },
+    { key: "LUISMI",    label: "Luismi",    activeBg: encargadoColor.LUISMI.text,    activeColor: "white", inBg: encargadoColor.LUISMI.bg,       inColor: encargadoColor.LUISMI.text },
     { key: "MARIA",     label: "María",     activeBg: encargadoColor.MARIA.text,     activeColor: "white", inBg: encargadoColor.MARIA.bg,        inColor: encargadoColor.MARIA.text },
   ];
 
@@ -275,7 +336,7 @@ function TabAlojamientos({ data, camasMap }) {
       <div style={{ fontSize: "12px", color: "#6b7280", marginBottom: "12px" }}>{final.length} alojamientos</div>
       {final.length === 0 ? <EmptyState /> : (
         <div style={{ display: "grid", gap: "12px" }}>
-          {final.map((a, i) => {
+          {pageItems.map((a, i) => {
             const refKey = String(a.ref || "").padStart(3, "0");
             const extras = camasMap[refKey] || {};
             return (
@@ -337,6 +398,46 @@ function TabAlojamientos({ data, camasMap }) {
               </div>
             );
           })}
+        </div>
+      )}
+      {final.length > 0 && (
+        <div style={{
+          display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px",
+          marginTop: "16px", background: "white", border: "1px solid #e5e7eb", borderRadius: "12px",
+          padding: "10px 14px", boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <span style={{ fontSize: "12px", color: "#9ca3af", fontWeight: 600 }}>Por página</span>
+            <div style={{ display: "flex", background: "#f3f4f6", borderRadius: "999px", padding: "3px", gap: "2px" }}>
+              {[5, 10, 25].map(n => (
+                <button key={n} onClick={() => setPageSize(n)} style={{
+                  padding: "5px 12px", borderRadius: "999px", cursor: "pointer", fontWeight: 700, fontSize: "12px",
+                  border: "none", background: pageSize === n ? "#1e3a5f" : "transparent",
+                  color: pageSize === n ? "white" : "#6b7280", transition: "all 0.15s",
+                }}>{n}</button>
+              ))}
+            </div>
+          </div>
+
+          {totalPages > 1 && (
+            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} aria-label="Página anterior" style={{
+                width: "30px", height: "30px", borderRadius: "50%", border: "1px solid #e5e7eb", display: "flex",
+                alignItems: "center", justifyContent: "center", background: page === 1 ? "#f9fafb" : "white",
+                color: page === 1 ? "#d1d5db" : "#1e3a5f", fontSize: "14px", fontWeight: 700,
+                cursor: page === 1 ? "default" : "pointer", transition: "all 0.15s",
+              }}>‹</button>
+              <span style={{ fontSize: "12px", color: "#6b7280", fontWeight: 600, minWidth: "84px", textAlign: "center" }}>
+                Página <strong style={{ color: "#1e3a5f" }}>{page}</strong> de {totalPages}
+              </span>
+              <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} aria-label="Página siguiente" style={{
+                width: "30px", height: "30px", borderRadius: "50%", border: "1px solid #e5e7eb", display: "flex",
+                alignItems: "center", justifyContent: "center", background: page === totalPages ? "#f9fafb" : "white",
+                color: page === totalPages ? "#d1d5db" : "#1e3a5f", fontSize: "14px", fontWeight: 700,
+                cursor: page === totalPages ? "default" : "pointer", transition: "all 0.15s",
+              }}>›</button>
+            </div>
+          )}
         </div>
       )}
     </div>
